@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error - HireSense AI</title>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Global CSS -->
+    <link rel="stylesheet" href="/css/global.css">
+    <style>
+        .error-card {
+            width: 100%;
+            max-width: 480px;
+            padding: 50px 40px;
+            border-radius: var(--radius-lg);
+            text-align: center;
+        }
+        .error-icon {
+            font-size: 3rem;
+            color: var(--error);
+            margin-bottom: 25px;
+            display: inline-block;
+            background: rgba(239, 68, 68, 0.1);
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        .error-details {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 20px;
+            margin: 25px 0;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+        .detail-row {
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+        .detail-row:last-child {
+            margin-bottom: 0;
+        }
+        .detail-label {
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="center-box">
+        <div class="error-card glass-card animated">
+            <div class="error-icon">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+
+            <!-- Login failure block -->
+            <th:block th:if="${message != null}">
+                <h1 class="gradient-text" style="font-size: 1.8rem; font-weight: 800; margin-bottom: 12px;">Login Failed</h1>
+                <p style="color: var(--text-secondary); line-height: 1.6;" th:text="${message}"></p>
+                <div style="margin-top: 30px;">
+                    <a class="btn btn-primary" href="/users/login">
+                        Try Again <i class="fa-solid fa-rotate-left"></i>
+                    </a>
+                </div>
+            </th:block>
+
+            <!-- System failure block -->
+            <th:block th:if="${message == null}">
+                <h1 class="gradient-text" style="font-size: 1.8rem; font-weight: 800; margin-bottom: 8px;">System Exception</h1>
+                <p style="color: var(--text-secondary);">An unexpected runtime error has occurred on this operation.</p>
+
+                <div class="error-details">
+                    <div class="detail-row" th:if="${status != null}">
+                        <span class="detail-label">Status:</span> <span class="badge badge-error" style="font-size: 0.75rem; padding: 2px 8px;" th:text="${status}">500</span>
+                    </div>
+                    <div class="detail-row" th:if="${error != null}">
+                        <span class="detail-label">Error:</span> <span th:text="${error}">Internal Server Error</span>
+                    </div>
+                    <div class="detail-row" th:if="${path != null}">
+                        <span class="detail-label">Path:</span> <span th:text="${path}" style="font-family: monospace;">/users/report</span>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 15px; margin-top: 30px;">
+                    <a class="btn btn-secondary" href="/users/login">
+                        <i class="fa-solid fa-arrow-right-to-bracket"></i> Login
+                    </a>
+                    <a class="btn btn-primary" href="/users/dashboard">
+                        <i class="fa-solid fa-house"></i> Dashboard
+                    </a>
+                </div>
+            </th:block>
+        </div>
+    </div>
+
+</body>
+</html>

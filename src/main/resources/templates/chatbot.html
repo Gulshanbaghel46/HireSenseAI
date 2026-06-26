@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>HireSense AI - Interactive HR Chatbot</title>
+    <link rel="stylesheet" th:href="@{/css/global.css}">
+    <style>
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 70vh;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            margin-top: 20px;
+        }
+        .chat-header {
+            padding: 16px 24px;
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chat-messages {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            background: rgba(7, 8, 13, 0.4);
+        }
+        .message-bubble {
+            max-width: 70%;
+            padding: 14px 18px;
+            border-radius: var(--radius-sm);
+            line-height: 1.5;
+            font-size: 0.95rem;
+            animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .message-ai {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+        .message-user {
+            background: var(--primary-gradient);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
+        }
+        .chat-input-area {
+            padding: 16px 24px;
+            background: rgba(255, 255, 255, 0.02);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 12px;
+        }
+        .chat-input-area input {
+            flex: 1;
+            border-radius: var(--radius-sm);
+        }
+        .chat-input-area button {
+            width: auto;
+            padding: 0 24px;
+        }
+        @keyframes popIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        .role-badge {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid var(--border-color-hover);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a th:href="@{/users/dashboard}" class="nav-brand">HireSense AI</a>
+        <div class="nav-user">
+            <span class="avatar" th:text="${#strings.substring(name,0,1)}">C</span>
+            <span th:text="${name}">Candidate Name</span>
+            <a th:href="@{/users/logout}" class="btn btn-secondary btn-sm" style="width: auto;">Logout</a>
+        </div>
+    </nav>
+
+    <main class="container" style="flex: 1; padding: 40px 24px;">
+        <div class="animated" style="text-align: center; margin-bottom: 20px;">
+            <h1 class="title-lg gradient-text" style="font-size: 2.2rem; margin-bottom: 6px;">AI Mock HR Chatbot</h1>
+            <p class="subtitle" style="margin-bottom: 12px;">Practice handling interactive HR behavioral questions in an organic conversation flow.</p>
+        </div>
+
+        <div class="glass chat-container animated">
+            <div class="chat-header">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 1.5rem;">🤖</span>
+                    <div>
+                        <div style="font-weight: 700; font-size: 0.95rem;">Interactive HR Interviewer</div>
+                        <div style="font-size: 0.75rem; color: var(--success);" id="chatStatus">Ready to begin</div>
+                    </div>
+                </div>
+                <div>
+                    <select id="roleSelector" style="width: auto; padding: 6px 12px; font-size: 0.85rem;">
+                        <option value="Java Developer">Java Developer</option>
+                        <option value="AI/ML Engineer">AI/ML Engineer</option>
+                        <option value="Web Developer">Web Developer</option>
+                        <option value="Data Scientist">Data Scientist</option>
+                        <option value="DevOps Engineer">DevOps Engineer</option>
+                        <option value="Cloud Engineer">Cloud Engineer</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <div class="message-bubble message-ai">
+                    Hello! I am your HR interviewer today. When you're ready, tell me which position you are interested in and explain how your experience makes you a strong candidate.
+                </div>
+            </div>
+
+            <div class="chat-input-area">
+                <input type="text" id="userInput" placeholder="Type your answer here..." onkeypress="handleKey(event)">
+                <button class="btn btn-primary" onclick="sendMessage()">Send Message</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let chatHistory = "AI: Hello! I am your HR interviewer today. When you're ready, tell me which position you are interested in and explain how your experience makes you a strong candidate.";
+
+        function handleKey(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        async function sendMessage() {
+            const inputEl = document.getElementById('userInput');
+            const message = inputEl.value.trim();
+            if (!message) return;
+
+            // Append User Message
+            appendMessage(message, 'user');
+            inputEl.value = '';
+
+            const statusEl = document.getElementById('chatStatus');
+            statusEl.innerText = "Interviewer is thinking...";
+            statusEl.style.color = "var(--warning)";
+
+            // Call API
+            try {
+                const response = await fetch('/users/chatbot/message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        history: chatHistory,
+                        jobRole: document.getElementById('roleSelector').value
+                    })
+                });
+                const data = await response.json();
+                if (data.reply) {
+                    appendMessage(data.reply, 'ai');
+                    chatHistory += "\nUser: " + message + "\nAI: " + data.reply;
+                } else {
+                    appendMessage("I see. Can you tell me more about your recent project achievements?", 'ai');
+                }
+            } catch (err) {
+                appendMessage("I see. Can you tell me more about your recent project achievements?", 'ai');
+            } finally {
+                statusEl.innerText = "Ready to respond";
+                statusEl.style.color = "var(--success)";
+            }
+        }
+
+        function appendMessage(text, sender) {
+            const container = document.getElementById('chatMessages');
+            const bubble = document.createElement('div');
+            bubble.className = `message-bubble message-${sender}`;
+            bubble.innerText = text;
+            container.appendChild(bubble);
+            container.scrollTop = container.scrollHeight;
+        }
+    </script>
+</body>
+</html>

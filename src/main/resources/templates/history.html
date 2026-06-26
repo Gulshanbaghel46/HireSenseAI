@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview History - HireSense AI</title>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Global CSS -->
+    <link rel="stylesheet" href="/css/global.css">
+    <style>
+        .history-container {
+            padding-top: 30px;
+            padding-bottom: 60px;
+            max-width: 900px;
+        }
+        .history-list {
+            margin-top: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .history-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 25px;
+            gap: 20px;
+        }
+        @media (max-width: 768px) {
+            .history-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .history-item button, .history-item form {
+                width: 100%;
+            }
+        }
+        .session-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .session-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: rgba(99, 102, 241, 0.08);
+            border: 1px solid rgba(99, 102, 241, 0.15);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 50px 30px;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="navbar">
+        <a href="/users/dashboard" class="nav-brand">
+            <i class="fa-solid fa-brain"></i> HireSense AI
+        </a>
+        <div class="nav-user">
+            <button onclick="window.location.href='/users/dashboard'" class="btn btn-secondary btn-sm" style="width: auto;">
+                <i class="fa-solid fa-house"></i> Home
+            </button>
+        </div>
+    </header>
+
+    <main class="container history-container">
+        <div style="margin-bottom: 25px;" class="animated">
+            <a href="/users/dashboard" class="btn btn-secondary btn-sm" style="width: auto; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-arrow-left"></i> Dashboard
+            </a>
+        </div>
+
+        <h1 class="gradient-text animated" style="font-size: 2.2rem; font-weight: 800; letter-spacing: -0.5px;">My Interview Sessions</h1>
+        <p class="subtitle animated" style="margin-bottom: 30px;">Track and review performance details of your completed mock interviews.</p>
+
+        <!-- Empty State -->
+        <div class="glass-card empty-state animated" th:if="${#lists.isEmpty(sessions)}">
+            <i class="fa-solid fa-folder-open" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 20px;"></i>
+            <h3 style="font-size: 1.2rem; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">No Interviews Found</h3>
+            <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 25px;">You haven't completed any interview sessions yet. Complete your first evaluation to generate reports.</p>
+            <a href="/users/interview" class="btn btn-primary" style="width: auto; display: inline-flex;">
+                Start Interview <i class="fa-solid fa-circle-play"></i>
+            </a>
+        </div>
+
+        <!-- History List -->
+        <div class="history-list animated" style="animation-delay: 0.1s;" th:if="${!#lists.isEmpty(sessions)}">
+            <div class="glass-card history-item" th:each="s : ${sessions}">
+                <div class="session-info">
+                    <div class="session-icon">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <div>
+                        <h4 style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary);" th:text="${s.jobRole}">
+                            Java Developer
+                        </h4>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">
+                            Session ID: <span th:text="${s.sessionId}" style="font-family: monospace;">17123456789</span>
+                        </p>
+                        <div style="margin-top: 6px; display: flex; gap: 12px; font-size: 0.8rem;">
+                            <span style="color: var(--primary); font-weight: 600;" th:text="${'Score: ' + s.overallScore + ' / 10'}">Score: 8.0</span>
+                            <span style="color: var(--text-muted);" th:text="${s.startTime != null ? #temporals.format(s.startTime, 'dd MMM yyyy HH:mm') : ''}">Date</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <span class="badge" th:classappend="${s.finalPrediction.name() == 'SELECTED' ? 'badge-success' : (s.finalPrediction.name() == 'MAYBE_SELECTED' ? 'badge-warning' : 'badge-error')}"
+                          th:text="${#strings.replace(s.finalPrediction.name(), '_', ' ')}">SELECTED</span>
+                    <form action="/users/report" method="get">
+                        <input type="hidden" name="sessionId" th:value="${s.sessionId}">
+                        <button type="submit" class="btn btn-primary btn-sm" style="width: auto; min-width: 140px;">
+                            View Report <i class="fa-solid fa-file-invoice"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+</body>
+</html>

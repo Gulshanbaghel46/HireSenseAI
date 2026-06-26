@@ -1,0 +1,20 @@
+# HireSense AI — Python Dependencies
+# Used by emotion.py for real-time facial emotion detection during interviews.
+#
+# Install with:  pip install -r requirements.txt
+# Recommended:   Python 3.9 – 3.11  (fer has limited support on 3.12+)
+
+# Facial Emotion Recognition
+fer==22.5.1
+
+# Computer Vision (webcam capture & frame rendering)
+opencv-python==4.10.0.84
+
+# Deep learning backend required by fer
+tensorflow==2.13.0
+
+# Image processing (dependency of fer)
+Pillow>=9.0.0
+
+# Numerical computing (dependency of tensorflow & opencv)
+numpy>=1.23.0,<2.0.0

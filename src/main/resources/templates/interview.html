@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Interview Workspace - HireSense AI</title>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Global CSS -->
+    <link rel="stylesheet" href="/css/global.css">
+    <style>
+        body {
+            background-color: #08090e;
+        }
+        .interview-layout {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 30px;
+            padding: 30px 0;
+            min-height: calc(100vh - 90px);
+        }
+        @media (max-width: 992px) {
+            .interview-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+        /* Left: Recruiter Panel & Voice Feed */
+        .workspace-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        .live-feed-box {
+            position: relative;
+            aspect-ratio: 16/9;
+            background: #11131c;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+        .live-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .feed-overlay-top {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+        .feed-overlay-bottom {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+        .feed-badge {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .rec-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--error);
+            border-radius: 50%;
+            animation: pulse-red 1.5s infinite;
+        }
+        @keyframes pulse-red {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.5; }
+        }
+        /* Right: Editor Panel */
+        .editor-card {
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+        }
+        .timer-progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+        .timer-fill {
+            height: 100%;
+            background: var(--primary-gradient);
+            width: 100%;
+            transition: width 1s linear, background-color 0.5s ease;
+        }
+        .textarea-wrapper {
+            position: relative;
+            margin-top: 25px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .editor-textarea {
+            width: 100%;
+            height: 250px;
+            resize: none;
+            padding: 20px;
+            font-size: 1rem;
+            line-height: 1.6;
+            flex-grow: 1;
+        }
+        .word-count-badge {
+            position: absolute;
+            bottom: 15px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+        .transcript-feed {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 25px;
+            max-height: 160px;
+            overflow-y: auto;
+            position: relative;
+        }
+        .transcript-heading {
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .transcript-text {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: var(--text-secondary);
+        }
+        .speak-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .speak-btn:hover {
+            border-color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="navbar">
+        <a href="/users/dashboard" class="nav-brand">
+            <i class="fa-solid fa-brain"></i> HireSense AI
+        </a>
+        <div class="nav-user">
+            <span class="badge badge-primary"><i class="fa-solid fa-circle-play"></i> LIVE SESSION</span>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="interview-layout">
+            <!-- Left Panel: Webcam Feed & Speech Transcripts -->
+            <div class="workspace-panel animated">
+                <div class="live-feed-box">
+                    <div class="feed-overlay-top">
+                        <span class="feed-badge"><div class="rec-dot"></div> RECORDING ACTIVE</span>
+                        <span class="feed-badge" id="camera-status"><i class="fa-solid fa-video-slash"></i> CONNECTING CAMERA...</span>
+                    </div>
+
+                    <video id="webcam-feed" class="live-video" autoplay muted></video>
+
+                    <div class="feed-overlay-bottom">
+                        <span class="feed-badge" id="eye-contact-status"><i class="fa-solid fa-eye"></i> Eye Contact: Analyzing...</span>
+                        <span class="feed-badge" id="emotion-status"><i class="fa-solid fa-face-smile"></i> Emotion: Neutral</span>
+                    </div>
+                </div>
+
+                <!-- Live Subtitles / Transcript Feed -->
+                <div class="transcript-feed">
+                    <div class="transcript-heading">
+                        <i class="fa-solid fa-wave-square"></i> Real-time Speech Analysis
+                    </div>
+                    <div class="transcript-text" id="live-speech-box">
+                        Start speaking. Your speech analysis content will appear here in real-time...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Editor & Timer -->
+            <div class="animated" style="animation-delay: 0.1s;">
+                <div class="glass-card editor-card">
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="badge badge-primary" style="font-size: 0.75rem;">
+                                Question <span th:text="${index + 1}">1</span> / <span th:text="${totalQuestions}">5</span>
+                            </span>
+                            <button class="speak-btn" onclick="readQuestionAloud()">
+                                <i class="fa-solid fa-volume-high"></i> Read Aloud
+                            </button>
+                            <span class="badge badge-warning" id="timer" style="font-size: 0.8rem; font-weight: 700;">
+                                Time Left: 60s
+                            </span>
+                        </div>
+                        <div class="timer-progress-bar">
+                            <div class="timer-fill" id="timer-bar"></div>
+                        </div>
+
+                        <h2 id="questionText" style="font-size: 1.35rem; font-weight: 700; line-height: 1.5; margin-top: 25px; color: var(--text-primary);" 
+                            th:text="${question}">
+                            Question prompt will load here...
+                        </h2>
+                    </div>
+
+                    <form th:action="@{/users/submitAnswer}" method="post" id="interview-form">
+                        <input type="hidden" name="question" th:value="${question}">
+                        <input type="hidden" name="index" th:value="${index}">
+                        <input type="hidden" name="sessionId" th:value="${sessionId}">
+                        <input type="hidden" name="jobRole" th:value="${jobRole}">
+
+                        <div class="textarea-wrapper">
+                            <textarea name="answer" id="answer-input" class="editor-textarea" 
+                                      placeholder="Provide your solution or answer here. Speak clearly to transcribe automatically..." 
+                                      required oninput="updateWordCount(this)"></textarea>
+                            <div class="word-count-badge">
+                                <span id="word-count">0</span> words
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" style="margin-top: 25px;">
+                            Submit & Next Question <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script th:inline="javascript">
+        const sessionId = [[${sessionId}]];
+        
+        // ─── Text-to-Speech (Read Question Aloud) ─────────────────────
+        function readQuestionAloud() {
+            const text = document.getElementById("questionText").innerText;
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // Stop ongoing speech
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 1.0;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+        
+        // Auto-read question on load
+        window.addEventListener('load', () => {
+            setTimeout(readQuestionAloud, 800);
+        });
+
+        // ─── Countdown Timer ──────────────────────────────────────────
+        let timeLeft = 60;
+        const totalDuration = 60;
+        const timerElement = document.getElementById("timer");
+        const timerBar = document.getElementById("timer-bar");
+
+        const countdown = setInterval(function() {
+            timeLeft--;
+            timerElement.innerHTML = `Time Left: ${timeLeft}s`;
+            
+            const percent = (timeLeft / totalDuration) * 100;
+            timerBar.style.width = `${percent}%`;
+
+            if (timeLeft <= 15) {
+                timerElement.className = "badge badge-error";
+                timerBar.style.background = "var(--error-gradient)";
+            }
+
+            if (timeLeft <= 0) {
+                clearInterval(countdown);
+                document.getElementById("interview-form").submit();
+            }
+        }, 1000);
+
+        // ─── Word Counter ─────────────────────────────────────────────
+        function updateWordCount(textarea) {
+            const text = textarea.value.trim();
+            const words = text ? text.split(/\s+/).length : 0;
+            document.getElementById("word-count").textContent = words;
+        }
+
+        // ─── Camera Media Capture & Video Recording Mocks ─────────────
+        const videoElement = document.getElementById("webcam-feed");
+        const cameraStatus = document.getElementById("camera-status");
+        let mediaRecorder;
+        let recordedChunks = [];
+
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+            .then(function(stream) {
+                videoElement.srcObject = stream;
+                cameraStatus.innerHTML = '<i class="fa-solid fa-circle" style="color: var(--success); font-size: 0.6rem;"></i> WEB-CAM ACTIVE';
+                cameraStatus.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+                cameraStatus.style.color = '#fff';
+
+                // Setup local recording
+                try {
+                    mediaRecorder = new MediaRecorder(stream);
+                    mediaRecorder.ondataavailable = (e) => {
+                        if (e.data.size > 0) recordedChunks.push(e.data);
+                    };
+                    mediaRecorder.start();
+                } catch(e) {
+                    console.log("MediaRecorder not supported or failed:", e);
+                }
+            })
+            .catch(function(error) {
+                console.error("Camera access error:", error);
+                cameraStatus.innerHTML = '<i class="fa-solid fa-video-slash"></i> CAMERA OFF';
+                cameraStatus.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+            });
+
+        // ─── Tab Switching Anti-Cheat Detection ──────────────────────────
+        document.addEventListener("visibilitychange", function() {
+            if (document.hidden) {
+                // Post tab switch cheat log to backend
+                fetch(`/users/logCheat?sessionId=${sessionId}&type=TAB_SWITCH`, { method: 'POST' })
+                    .then(() => {
+                        alert("Warning: Tab switching is monitored. This activity has been logged as a cheating violation.");
+                    });
+            }
+        });
+
+        // ─── Periodic Real-time Emotion / Attention Analysis (Mocked) ──────
+        const emotions = ['happy', 'stressed', 'nervous', 'neutral', 'neutral', 'neutral'];
+        setInterval(() => {
+            const randomEmotion = emotions[Math.floor(Math.random() * emotions.length)];
+            const eyeContact = Math.random() > 0.15; // 85% eye contact rate
+            const facePresent = Math.random() > 0.05; // 95% face present rate
+
+            // Update UI indicators
+            document.getElementById("emotion-status").innerHTML = `<i class="fa-solid fa-face-smile"></i> Emotion: ${randomEmotion.toUpperCase()}`;
+            document.getElementById("eye-contact-status").innerHTML = eyeContact 
+                ? `<i class="fa-solid fa-eye" style="color: var(--success);"></i> Eye Contact: Stable`
+                : `<i class="fa-solid fa-eye-slash" style="color: var(--error);"></i> Eye Contact: Unstable`;
+
+            // Log cheating alerts if eye contact is missing or face is gone
+            if (!facePresent) {
+                fetch(`/users/logCheat?sessionId=${sessionId}&type=FACE_MISSING`, { method: 'POST' });
+            } else if (!eyeContact) {
+                fetch(`/users/logCheat?sessionId=${sessionId}&type=LOOKING_AWAY`, { method: 'POST' });
+            }
+
+            // Log Emotion state to DB
+            fetch(`/users/logEmotion?sessionId=${sessionId}&emotion=${randomEmotion}&eyeContact=${eyeContact}&facePresent=${facePresent}`, { method: 'POST' });
+        }, 8000);
+
+        // ─── Speech Recognition (STT Voice Response) ───────────────────
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            const recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            
+            const liveSpeechBox = document.getElementById("live-speech-box");
+            const answerInput = document.getElementById("answer-input");
+
+            recognition.start();
+
+            recognition.onresult = function(event) {
+                let transcript = "";
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    transcript += event.results[i][0].transcript;
+                }
+                liveSpeechBox.innerHTML = `<i class="fa-solid fa-quote-left"></i> ${transcript || 'Start speaking...'}`;
+                
+                if (event.results[event.results.length - 1].isFinal) {
+                    const cleanTranscript = event.results[event.results.length - 1][0].transcript.trim();
+                    if (cleanTranscript) {
+                        const oldText = answerInput.value.trim();
+                        answerInput.value = oldText ? oldText + " " + cleanTranscript : cleanTranscript;
+                        updateWordCount(answerInput);
+                    }
+                }
+            };
+
+            recognition.onerror = function(event) {
+                console.error("Speech Recognition Error:", event.error);
+            };
+
+            recognition.onend = function() {
+                try { recognition.start(); } catch(e) {}
+            };
+        } else {
+            document.getElementById("live-speech-box").innerHTML = '<i class="fa-solid fa-microphone-slash"></i> Speech-to-text not supported in this browser.';
+        }
+    </script>
+</body>
+</html>

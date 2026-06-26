@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - HireSense AI</title>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Global CSS -->
+    <link rel="stylesheet" href="/css/global.css">
+    <style>
+        .dashboard-container {
+            padding-top: 40px;
+            padding-bottom: 60px;
+        }
+        .welcome-header {
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-top: 20px;
+        }
+        .dashboard-card {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 35px;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        .dashboard-card::after {
+            content: '';
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.05) 0%, transparent 70%);
+            top: -20px;
+            right: -20px;
+            border-radius: 50%;
+        }
+        .card-meta {
+            margin-bottom: 30px;
+        }
+        .card-icon-container {
+            width: 60px;
+            height: 60px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .icon-blue {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+        .icon-purple {
+            background: rgba(168, 85, 247, 0.1);
+            color: #a855f7;
+        }
+        .icon-cyan {
+            background: rgba(6, 182, 212, 0.1);
+            color: #06b6d4;
+        }
+        .icon-green {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+        }
+        .icon-orange {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+        }
+        .role-selector {
+            margin-bottom: 20px;
+        }
+        .role-selector select {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="navbar">
+        <a href="/users/dashboard" class="nav-brand">
+            <i class="fa-solid fa-brain"></i> HireSense AI
+        </a>
+        <div class="nav-user">
+            <div class="avatar">
+                <span th:text="${name != null ? #strings.substring(name, 0, 1).toUpperCase() : 'U'}">U</span>
+            </div>
+            <span th:text="${name != null ? name : 'User'}" style="font-weight: 600; font-size: 0.95rem; color: var(--text-primary);">User</span>
+            <button onclick="window.location.href='/users/logout'" class="btn btn-secondary btn-sm" style="width: auto; padding: 8px 16px;">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container dashboard-container">
+        <div class="welcome-header animated">
+            <div>
+                <h1 class="gradient-text" style="font-size: 2.2rem; font-weight: 800; letter-spacing: -0.5px;">
+                    Hello, <span th:text="${name != null ? name : 'Candidate'}">Candidate</span>! 👋
+                </h1>
+                <p style="color: var(--text-secondary); margin-top: 5px;">Welcome to your AI recruitment command center. What would you like to do today?</p>
+            </div>
+            <div>
+                <span class="badge badge-primary" th:text="${role != null ? role : 'CANDIDATE'}"><i class="fa-solid fa-bolt"></i> CANDIDATE</span>
+            </div>
+        </div>
+
+        <div class="dashboard-grid animated" style="animation-delay: 0.1s;">
+            <!-- Start Resume Interview Prep -->
+            <div class="glass-card dashboard-card">
+                <div class="card-meta">
+                    <div class="card-icon-container icon-purple">
+                        <i class="fa-solid fa-file-invoice"></i>
+                    </div>
+                    <h2 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 12px;">Analyze Resume & Interview</h2>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px;">
+                        Upload your PDF resume to extract skills, discover missing credentials, and generate a tailor-made 10-question AI interview.
+                    </p>
+                    
+                    <form action="/users/resume" method="get">
+                        <div class="role-selector">
+                            <select name="jobRole" required>
+                                <option value="">Select Target Job Role</option>
+                                <option value="Java Developer">Java Developer</option>
+                                <option value="AI/ML Engineer">AI/ML Engineer</option>
+                                <option value="Web Developer">Web Developer</option>
+                                <option value="Data Scientist">Data Scientist</option>
+                                <option value="DevOps Engineer">DevOps Engineer</option>
+                                <option value="Cloud Engineer">Cloud Engineer</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%); box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);">
+                            Proceed to Upload <i class="fa-solid fa-cloud-arrow-up"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Start General Mock Interview -->
+            <div class="glass-card dashboard-card">
+                <div class="card-meta">
+                    <div class="card-icon-container icon-blue">
+                        <i class="fa-solid fa-microphone-lines"></i>
+                    </div>
+                    <h2 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 12px;">General AI Interview</h2>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6;">
+                        Launch a dynamic, real-time voice and audio-enabled mock interview. Experience custom evaluation from the AI recruiter.
+                    </p>
+                </div>
+                <button onclick="window.location.href='/users/interview'" class="btn btn-primary">
+                    Start Mock Interview <i class="fa-solid fa-play"></i>
+                </button>
+            </div>
+
+            <!-- AI Interactive Chatbot -->
+            <div class="glass-card dashboard-card">
+                <div class="card-meta">
+                    <div class="card-icon-container icon-cyan">
+                        <i class="fa-solid fa-comments"></i>
+                    </div>
+                    <h2 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 12px;">HR Chatbot Interviewer</h2>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6;">
+                        Engage with our interactive AI HR Chatbot. Practice handling behavioral questions with real-time follow-up conversations.
+                    </p>
+                </div>
+                <button onclick="window.location.href='/users/chatbot'" class="btn btn-primary" style="background: var(--accent-gradient); box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);">
+                    Start HR Session <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+
+            <!-- Recruiter Dashboard (Conditional) -->
+            <div th:if="${role == 'RECRUITER' || role == 'ADMIN'}" class="glass-card dashboard-card">
+                <div class="card-meta">
+                    <div class="card-icon-container icon-green">
+                        <i class="fa-solid fa-users-gear"></i>
+                    </div>
+                    <h2 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 12px;">Recruiter Dashboard</h2>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6;">
+                        Access the Recruiter Panel to track, filter, compare, rank, and download assessment reports for all candidates.
+                    </p>
+                </div>
+                <button onclick="window.location.href='/recruiter/dashboard'" class="btn btn-success">
+                    Access Recruiter Panel <i class="fa-solid fa-shield-halved"></i>
+                </button>
+            </div>
+
+            <!-- Admin Panel (Conditional) -->
+            <div th:if="${role == 'ADMIN'}" class="glass-card dashboard-card">
+                <div class="card-meta">
+                    <div class="card-icon-container icon-orange">
+                        <i class="fa-solid fa-user-lock"></i>
+                    </div>
+                    <h2 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 12px;">Admin Console</h2>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6;">
+                        System administration, user database management, role configurations, delete operations, and health checks.
+                    </p>
+                </div>
+                <button onclick="window.location.href='/admin/dashboard'" class="btn btn-danger">
+                    Access Admin Panel <i class="fa-solid fa-lock"></i>
+                </button>
+            </div>
+
+            <!-- View History & Recommendations -->
+            <div class="glass-card dashboard-card">
+                <div class="card-meta">
+                    <div class="card-icon-container icon-cyan">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+                    <h2 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 12px;">My Interview History</h2>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6;">
+                        Access detailed score breakdowns, comprehensive technical feedback, selection predictions, and export PDFs from your past sessions.
+                    </p>
+                </div>
+                <button onclick="window.location.href='/users/history'" class="btn btn-secondary">
+                    View Interview History <i class="fa-solid fa-clock-rotate-left"></i>
+                </button>
+            </div>
+        </div>
+    </main>
+
+</body>
+</html>

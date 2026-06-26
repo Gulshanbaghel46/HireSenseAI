@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>HireSense AI - Recruiter Dashboard</title>
+    <link rel="stylesheet" th:href="@{/css/global.css}">
+    <style>
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+            margin-top: 30px;
+        }
+        .header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .search-filter {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            border-radius: var(--radius-sm);
+        }
+        .search-filter select {
+            width: auto;
+            padding: 8px 16px;
+        }
+        .candidate-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            margin-top: 16px;
+        }
+        .candidate-table th, .candidate-table td {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .candidate-table th {
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+        .candidate-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .score-col {
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .action-links {
+            display: flex;
+            gap: 12px;
+        }
+        .action-links a {
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+        .action-links a:hover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="#" class="nav-brand">HireSense AI <span style="font-size: 0.9rem; color: var(--text-muted);">Recruiter Panel</span></a>
+        <div class="nav-user">
+            <span class="avatar" th:text="${#strings.substring(name,0,1)}">R</span>
+            <span th:text="${name}">Recruiter Name</span>
+            <a th:href="@{/users/logout}" class="btn btn-secondary btn-sm" style="width: auto;">Logout</a>
+        </div>
+    </nav>
+
+    <main class="container" style="flex: 1; padding: 40px 24px;">
+        <div class="header-actions animated">
+            <div>
+                <h1 class="title-lg gradient-text">Recruiter Dashboard</h1>
+                <p class="subtitle">Review, rank, and export candidate performance assessments across job roles.</p>
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <a th:href="@{/recruiter/downloadExcelReport}" class="btn btn-primary" style="width: auto;">
+                    <span>📥 Export All (Excel)</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="glass-card animated" style="padding: 24px;">
+            <div class="search-filter">
+                <span style="font-size: 0.9rem; color: var(--text-secondary); font-weight: 600;">Filter by Role:</span>
+                <select id="roleFilter" onchange="filterCandidates()">
+                    <option value="ALL">All Roles</option>
+                    <option value="Java Developer">Java Developer</option>
+                    <option value="AI/ML Engineer">AI/ML Engineer</option>
+                    <option value="Web Developer">Web Developer</option>
+                    <option value="Data Scientist">Data Scientist</option>
+                    <option value="DevOps Engineer">DevOps Engineer</option>
+                    <option value="Cloud Engineer">Cloud Engineer</option>
+                </select>
+                <span style="margin-left: auto; font-size: 0.9rem; color: var(--text-muted);" 
+                      th:text="${#lists.size(sessions) + ' Candidates Evaluated'}">0 Candidates Evaluated</span>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table class="candidate-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Candidate</th>
+                            <th>Role</th>
+                            <th>Overall Score</th>
+                            <th>Resume</th>
+                            <th>Interview</th>
+                            <th>Attention</th>
+                            <th>Cheats</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="candidateBody">
+                        <tr th:each="s, iterStat : ${sessions}" class="candidate-row" th:data-role="${s.jobRole}">
+                            <td style="font-weight: 700; color: var(--text-muted);" th:text="${iterStat.count}">1</td>
+                            <td>
+                                <div style="font-weight: 600;" th:text="${s.user != null ? s.user.name : 'Unknown'}">Candidate Name</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);" th:text="${s.user != null ? s.user.email : ''}">email@domain.com</div>
+                            </td>
+                            <td th:text="${s.jobRole}">Java Developer</td>
+                            <td class="score-col" th:text="${s.overallScore + ' / 10'}">8.5 / 10</td>
+                            <td th:text="${s.resumeScore + ' %'}">80 %</td>
+                            <td th:text="${s.interviewScore + ' / 10'}">7.8 / 10</td>
+                            <td th:text="${s.attentionScore + ' %'}">92 %</td>
+                            <td>
+                                <span class="badge" 
+                                      th:classappend="${s.tabSwitchCount + s.faceMissingCount > 3} ? 'badge-error' : 'badge-success'"
+                                      th:text="${s.tabSwitchCount + s.faceMissingCount}">0</span>
+                            </td>
+                            <td>
+                                <span class="badge" 
+                                      th:classappend="${s.finalPrediction.name() == 'SELECTED'} ? 'badge-success' : (${s.finalPrediction.name() == 'MAYBE_SELECTED'} ? 'badge-warning' : 'badge-error')"
+                                      th:text="${#strings.replace(s.finalPrediction.name(), '_', ' ')}">SELECTED</span>
+                            </td>
+                            <td>
+                                <div class="action-links">
+                                    <a th:href="@{/users/report(sessionId=${s.sessionId})}">📊 Report</a>
+                                    <a th:href="@{/users/downloadReport(sessionId=${s.sessionId})}">📥 PDF</a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(sessions)}">
+                            <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                                No candidate assessment reports generated yet.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function filterCandidates() {
+            const filterValue = document.getElementById('roleFilter').value;
+            const rows = document.querySelectorAll('.candidate-row');
+            rows.forEach(row => {
+                const role = row.getAttribute('data-role');
+                if (filterValue === 'ALL' || role === filterValue) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

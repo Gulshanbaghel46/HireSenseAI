@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Report - HireSense AI</title>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Global CSS -->
+    <link rel="stylesheet" href="/css/global.css">
+    <style>
+        .report-container {
+            padding-top: 30px;
+            padding-bottom: 60px;
+        }
+        .report-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.8fr;
+            gap: 30px;
+            align-items: start;
+        }
+        @media (max-width: 992px) {
+            .report-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .circle-gauge {
+            width: 170px;
+            height: 170px;
+            border-radius: 50%;
+            background: conic-gradient(
+                var(--primary) calc(var(--percent) * 1%),
+                rgba(255, 255, 255, 0.05) 0%
+            );
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+            position: relative;
+            box-shadow: 0 0 25px rgba(99, 102, 241, 0.15);
+        }
+        .circle-gauge::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .inner-gauge {
+            width: 130px;
+            height: 130px;
+            background: #0d0f17;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .gauge-val {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1;
+        }
+        .gauge-lbl {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+        .result-panel {
+            padding: 35px 30px;
+            text-align: center;
+        }
+        .outcome-banner {
+            padding: 15px;
+            border-radius: var(--radius-sm);
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .outcome-selected {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+        .outcome-average {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+        .outcome-rejected {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: var(--error);
+        }
+        .breakdown-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .feedback-card {
+            padding: 25px 30px;
+        }
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+        .score-indicator {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .score-good {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+        .score-avg {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+        }
+        .score-poor {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+        }
+        .answer-content {
+            background: rgba(0, 0, 0, 0.15);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 15px 20px;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        .metrics-card {
+            margin-bottom: 25px;
+            padding: 24px;
+        }
+        .rec-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .rec-item:last-child {
+            border: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="navbar">
+        <a href="/users/dashboard" class="nav-brand">
+            <i class="fa-solid fa-brain"></i> HireSense AI
+        </a>
+        <div class="nav-user">
+            <button onclick="window.location.href='/users/dashboard'" class="btn btn-secondary btn-sm" style="width: auto;">
+                <i class="fa-solid fa-house"></i> Home
+            </button>
+        </div>
+    </header>
+
+    <main class="container report-container">
+        <div style="margin-bottom: 25px;" class="animated">
+            <a href="/users/dashboard" class="btn btn-secondary btn-sm" style="width: auto; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+
+        <div class="report-grid">
+            <!-- Left Column: Metrics Gauge & Charts -->
+            <div class="animated" style="animation-delay: 0.05s;">
+                <div class="glass-card result-panel">
+                    <h2 style="font-size: 1.4rem; font-weight: 700; color: var(--text-primary);" th:text="${interviewSession.jobRole}">Java Developer</h2>
+                    
+                    <div class="circle-gauge" th:style="|--percent: ${(interviewSession.overallScore != null ? interviewSession.overallScore : 0) * 10}|">
+                        <div class="inner-gauge">
+                            <span class="gauge-val" th:text="${#numbers.formatDecimal((interviewSession.overallScore != null ? interviewSession.overallScore : 0.0), 1, 1)}">0.0</span>
+                            <span class="gauge-lbl">Overall Score</span>
+                        </div>
+                    </div>
+
+                    <div th:class="${interviewSession.finalPrediction.name() == 'SELECTED' ? 'outcome-banner outcome-selected' : (interviewSession.finalPrediction.name() == 'MAYBE_SELECTED' ? 'outcome-banner outcome-average' : 'outcome-banner outcome-rejected')}">
+                        <i th:class="${interviewSession.finalPrediction.name() == 'SELECTED' ? 'fa-solid fa-circle-check' : (interviewSession.finalPrediction.name() == 'MAYBE_SELECTED' ? 'fa-solid fa-circle-info' : 'fa-solid fa-circle-xmark')}"></i>
+                        <span th:text="${#strings.replace(interviewSession.finalPrediction.name(), '_', ' ')}">SELECTED</span>
+                    </div>
+
+                    <div style="text-align: left; margin: 25px 0; font-size: 0.95rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color: var(--text-secondary);">Interview Score:</span>
+                            <strong th:text="${interviewSession.interviewScore + ' / 10'}">0.0</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color: var(--text-secondary);">Resume Score:</span>
+                            <strong th:text="${interviewSession.resumeScore + ' %'}">0%</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color: var(--text-secondary);">Communication Score:</span>
+                            <strong th:text="${interviewSession.communicationScore + ' / 10'}">0.0</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color: var(--text-secondary);">Attention Accuracy:</span>
+                            <strong th:text="${interviewSession.attentionScore + ' %'}">100%</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color: var(--text-secondary);">Tab Switches:</span>
+                            <strong th:text="${interviewSession.tabSwitchCount}">0</strong>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 30px;">
+                        <a th:href="@{/users/downloadReport(sessionId=${sessionId})}" class="btn btn-primary">
+                            Download PDF Report <i class="fa-solid fa-file-pdf"></i>
+                        </a>
+                        <a th:href="@{/users/downloadExcel}" class="btn btn-secondary">
+                            Export Excel
+                        </a>
+                    </div>
+                </div>
+
+                <div class="glass-card metrics-card animated" style="margin-top: 25px;">
+                    <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 16px;">Live Behavioral & Emotion Graph</h3>
+                    <canvas id="emotionChart" width="100" height="100"></canvas>
+                </div>
+            </div>
+
+            <!-- Right Column: Q&A & Recommendations -->
+            <div class="animated" style="animation-delay: 0.1s;">
+                <!-- Personalized Learning Recommendations -->
+                <div class="glass-card metrics-card" th:if="${not #lists.isEmpty(recommendations)}" style="margin-bottom: 30px;">
+                    <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 12px; color: var(--primary);">ðŸŽ¯ Personalized Learning Paths</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 16px;">Based on your answers, we recommend studying the following resources:</p>
+                    <div class="rec-item" th:each="rec : ${recommendations}">
+                        <div>
+                            <span class="badge" th:classappend="${rec.priority.name() == 'HIGH' ? 'badge-error' : 'badge-warning'}" th:text="${rec.priority}">HIGH</span>
+                            <strong style="margin-left: 8px;" th:text="${rec.topic}">Topic</strong>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;" th:text="${'Course: ' + rec.courseTitle + ' (' + rec.platform + ')'}">Udemy</div>
+                        </div>
+                        <a th:href="${rec.courseUrl}" target="_blank" class="btn btn-primary btn-sm" style="width: auto;">View Course</a>
+                    </div>
+                </div>
+
+                <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 20px;" class="gradient-text">Question Performance Breakdown</h2>
+                
+                <div class="breakdown-list">
+                    <div class="glass-card feedback-card" th:each="ans : ${answers}">
+                        <div class="question-header">
+                            <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); line-height: 1.4;">
+                                Q: <span th:text="${ans.question}">Question</span>
+                            </h3>
+                            <span th:class="${ans.score >= 8 ? 'score-indicator score-good' : (ans.score >= 5 ? 'score-indicator score-avg' : 'score-indicator score-poor')}"
+                                  th:text="${ans.score + '/10'}">0/10</span>
+                        </div>
+                        
+                        <h4 style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Your Answer</h4>
+                        <div class="answer-content" th:text="${ans.answer}">Submitted candidate answer...</div>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 16px;">
+                            <div style="background: rgba(255,255,255,0.02); padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); text-align: center;">
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Relevance</div>
+                                <div style="font-weight: 700; color: var(--primary);" th:text="${ans.relevanceScore + ' / 10'}">0.0</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.02); padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); text-align: center;">
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Technical Accuracy</div>
+                                <div style="font-weight: 700; color: var(--primary);" th:text="${ans.technicalScore + ' / 10'}">0.0</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.02); padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); text-align: center;">
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Grammar</div>
+                                <div style="font-weight: 700; color: var(--primary);" th:text="${ans.grammarScore + ' / 10'}">0.0</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.02); padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); text-align: center;">
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Fluency</div>
+                                <div style="font-weight: 700; color: var(--primary);" th:text="${ans.fluencyScore + ' / 10'}">0.0</div>
+                            </div>
+                        </div>
+
+                        <h4 style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">AI Evaluation Feedback</h4>
+                        <p style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.5; display: flex; align-items: flex-start; gap: 8px;">
+                            <i class="fa-solid fa-comment-dots" style="color: var(--primary); margin-top: 4px;"></i>
+                            <span th:text="${ans.aiFeedback != null ? ans.aiFeedback : ans.feedback}">Feedback from AI...</span>
+                        </p>
+                    </div>
+
+                    <div class="glass-card" style="padding: 30px; text-align: center; color: var(--text-secondary);" th:if="${#lists.isEmpty(answers)}">
+                        <i class="fa-solid fa-triangle-exclamation" style="font-size: 2.2rem; color: var(--warning); margin-bottom: 15px;"></i>
+                        <p>No answers found for this session database record.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script th:inline="javascript">
+        // Fetch chart data dynamically
+        const sessionIdVal = [[${sessionId}]];
+        fetch(`/users/analyticsData?sessionId=${sessionIdVal}`)
+            .then(res => res.json())
+            .then(data => {
+                const ctx = document.getElementById('emotionChart').getContext('2d');
+                
+                // Fallback dummy labels if no logs are present
+                const labels = data.emotionLabels && data.emotionLabels.length > 0 ? data.emotionLabels : ['neutral', 'happy', 'stressed', 'nervous'];
+                const counts = data.emotionCounts && data.emotionCounts.length > 0 ? data.emotionCounts : [12, 4, 3, 2];
+
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels.map(l => l.toUpperCase()),
+                        datasets: [{
+                            data: counts,
+                            backgroundColor: [
+                                'rgba(99, 102, 241, 0.7)',
+                                'rgba(16, 185, 129, 0.7)',
+                                'rgba(239, 68, 68, 0.7)',
+                                'rgba(245, 158, 11, 0.7)',
+                                'rgba(168, 85, 247, 0.7)'
+                            ],
+                            borderColor: 'rgba(255, 255, 255, 0.08)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#94a3b8',
+                                    font: {
+                                        family: 'Plus Jakarta Sans',
+                                        weight: '600'
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+    </script>
+</body>
+</html>
+

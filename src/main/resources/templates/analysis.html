@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Analysis - HireSense AI</title>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Global CSS -->
+    <link rel="stylesheet" href="/css/global.css">
+    <style>
+        .analysis-container {
+            padding-top: 30px;
+            padding-bottom: 60px;
+        }
+        .back-nav {
+            margin-bottom: 25px;
+        }
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+        }
+        @media (max-width: 900px) {
+            .analysis-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .score-circle-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .radial-progress {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            margin-bottom: 20px;
+        }
+        .radial-progress svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+        .radial-progress circle {
+            fill: none;
+            stroke-width: 12;
+            stroke-linecap: round;
+        }
+        .radial-progress circle.bg {
+            stroke: rgba(255, 255, 255, 0.05);
+        }
+        .radial-progress circle.fg {
+            stroke: url(#score-gradient);
+            stroke-dasharray: 440;
+            stroke-dashoffset: 440;
+            transition: stroke-dashoffset 1s ease-out;
+        }
+        .score-val {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2.2rem;
+            font-weight: 800;
+        }
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        .skills-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .skill-badge {
+            background: rgba(6, 182, 212, 0.08);
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            color: #06b6d4;
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .missing-skill-badge {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .question-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 18px 20px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            transition: all 0.2s ease;
+        }
+        .question-card:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+        .question-card i {
+            color: var(--primary);
+            font-size: 1.2rem;
+            margin-top: 2px;
+        }
+        .collapsible-header {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            padding: 15px 20px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            user-select: none;
+            transition: background 0.2s;
+        }
+        .collapsible-header:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .collapsible-content {
+            display: none;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            border-top: none;
+            border-bottom-left-radius: var(--radius-sm);
+            border-bottom-right-radius: var(--radius-sm);
+            padding: 20px;
+            max-height: 250px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        .collapsible-header.active {
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+        .collapsible-header.active .icon-chevron {
+            transform: rotate(180deg);
+        }
+        .icon-chevron {
+            transition: transform 0.2s ease;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="navbar">
+        <a href="/users/dashboard" class="nav-brand">
+            <i class="fa-solid fa-brain"></i> HireSense AI
+        </a>
+        <div class="nav-user">
+            <button onclick="window.location.href='/users/dashboard'" class="btn btn-secondary btn-sm" style="width: auto;">
+                <i class="fa-solid fa-house"></i> Home
+            </button>
+        </div>
+    </header>
+
+    <main class="container analysis-container">
+        <div class="back-nav animated">
+            <a href="/users/dashboard" class="btn btn-secondary btn-sm" style="width: auto; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+
+        <div class="analysis-grid">
+            <!-- Left Column: Score Card -->
+            <div class="animated" style="animation-delay: 0.05s;">
+                <div class="glass-card score-circle-container" style="margin-bottom: 30px;">
+                    <div class="radial-progress">
+                        <svg>
+                            <defs>
+                                <linearGradient id="score-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#6366f1" />
+                                    <stop offset="100%" stop-color="#a855f7" />
+                                </linearGradient>
+                            </defs>
+                            <circle class="bg" cx="75" cy="75" r="70"></circle>
+                            <circle class="fg" id="score-ring" cx="75" cy="75" r="70"></circle>
+                        </svg>
+                        <div class="score-val"><span th:text="${resumeScore}">0</span></div>
+                    </div>
+                    <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 5px;">Resume Score</h2>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Calculated based on detected skills, role compatibility, and credentials.</p>
+                </div>
+
+                <!-- Skills Lists -->
+                <div class="glass-card" style="padding: 25px; margin-bottom: 30px;">
+                    <h3 class="section-title"><i class="fa-solid fa-circle-check" style="color: var(--success);"></i> Detected Skills</h3>
+                    <div class="skills-container">
+                        <span class="skill-badge" th:each="skill : ${skills}">
+                            <i class="fa-solid fa-tag"></i> <span th:text="${skill}">Skill</span>
+                        </span>
+                        <p th:if="${#lists.isEmpty(skills)}" style="color: var(--text-muted); font-size: 0.9rem;">No dynamic skills matching found.</p>
+                    </div>
+                </div>
+
+                <div class="glass-card" style="padding: 25px;" th:if="${missingSkills != null and !missingSkills.isEmpty()}">
+                    <h3 class="section-title"><i class="fa-solid fa-circle-exclamation" style="color: var(--error);"></i> Missing Skills</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 15px;">Consider highlighting these skills on your resume for this role:</p>
+                    <div class="skills-container">
+                        <span class="missing-skill-badge" th:each="skill : ${missingSkills}">
+                            <i class="fa-solid fa-circle-plus"></i> <span th:text="${skill}">Missing Skill</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Prep & Raw Text -->
+            <div class="animated" style="animation-delay: 0.1s;">
+                <div class="glass-card" style="padding: 35px; margin-bottom: 30px;">
+                    <h2 class="gradient-text" style="font-size: 1.6rem; font-weight: 800; margin-bottom: 10px;">Recommended Prep Strategy</h2>
+                    <p class="subtitle" style="margin-bottom: 25px;">AI generated custom-fit interview questions targeting your background and missing areas:</p>
+
+                    <div th:each="question : ${questions}" class="question-card">
+                        <i class="fa-solid fa-circle-question"></i>
+                        <div>
+                            <p style="font-weight: 600; font-size: 0.98rem; color: var(--text-primary);" th:text="${question}"></p>
+                        </div>
+                    </div>
+                    
+                    <p th:if="${#lists.isEmpty(questions)}" style="color: var(--text-secondary);">No mock questions generated.</p>
+
+                    <div style="margin-top: 30px;">
+                        <button onclick="window.location.href='/users/interview'" class="btn btn-primary">
+                            Launch Mock Interview Workspace <i class="fa-solid fa-microphone"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Collapsible Extracted Source -->
+                <div class="animated" style="animation-delay: 0.15s; margin-bottom: 20px;">
+                    <div class="collapsible-header glass-card" onclick="toggleExtractedText()">
+                        <span><i class="fa-solid fa-file-lines" style="color: var(--text-secondary); margin-right: 8px;"></i> Extracted Resume Content</span>
+                        <i class="fa-solid fa-chevron-down icon-chevron"></i>
+                    </div>
+                    <div class="collapsible-content" id="extracted-text" th:text="${resumeText}">
+                        Resume text here...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script th:inline="javascript">
+        // Set radial progress stroke-dashoffset
+        document.addEventListener("DOMContentLoaded", function() {
+            /*[[${resumeScore}]]*/
+            let score = /*[[${resumeScore}]]*/ 0;
+            if (score > 100) score = 100;
+            if (score < 0) score = 0;
+            
+            const radius = 70;
+            const circumference = 2 * Math.PI * radius; // Approx 439.8
+            const ring = document.getElementById('score-ring');
+            
+            if (ring) {
+                const offset = circumference - (score / 100) * circumference;
+                ring.style.strokeDasharray = circumference;
+                ring.style.strokeDashoffset = offset;
+            }
+        });
+
+        // Toggle Extracted Resume Text panel
+        function toggleExtractedText() {
+            const content = document.getElementById('extracted-text');
+            const header = content.previousElementSibling;
+            
+            if (content.style.display === 'block') {
+                content.style.display = 'none';
+                header.classList.remove('active');
+            } else {
+                content.style.display = 'block';
+                header.classList.add('active');
+            }
+        }
+    </script>
+</body>
+</html>

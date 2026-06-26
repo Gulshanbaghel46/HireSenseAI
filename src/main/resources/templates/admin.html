@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>HireSense AI - Admin Dashboard</title>
+    <link rel="stylesheet" th:href="@{/css/global.css}">
+    <style>
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            padding: 24px;
+            text-align: center;
+        }
+        .stat-card h3 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 6px;
+        }
+        .stat-card p {
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+        .user-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            margin-top: 16px;
+        }
+        .user-table th, .user-table td {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .user-table th {
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+        }
+        .user-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .role-select {
+            width: auto;
+            padding: 6px 12px;
+            font-size: 0.9rem;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="#" class="nav-brand">HireSense AI <span style="font-size: 0.9rem; color: var(--text-muted);">Admin Panel</span></a>
+        <div class="nav-user">
+            <span class="avatar" th:text="${#strings.substring(name,0,1)}">A</span>
+            <span th:text="${name}">Admin Name</span>
+            <a th:href="@{/users/logout}" class="btn btn-secondary btn-sm" style="width: auto;">Logout</a>
+        </div>
+    </nav>
+
+    <main class="container" style="flex: 1; padding: 40px 24px;">
+        <div class="animated" style="margin-bottom: 24px;">
+            <h1 class="title-lg gradient-text">System Administration</h1>
+            <p class="subtitle">Manage user privileges, view platform execution logs, and monitor metrics.</p>
+        </div>
+
+        <div class="stats-grid animated">
+            <div class="glass-card stat-card">
+                <h3 th:text="${#lists.size(users)}">0</h3>
+                <p>Registered Users</p>
+            </div>
+            <div class="glass-card stat-card">
+                <h3 th:text="${totalInterviews}">0</h3>
+                <p>Interviews Conducted</p>
+            </div>
+            <div class="glass-card stat-card">
+                <h3>99.9%</h3>
+                <p>System Uptime</p>
+            </div>
+        </div>
+
+        <div class="glass-card animated" style="padding: 24px;">
+            <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 16px;">User Management</h2>
+            <div style="overflow-x: auto;">
+                <table class="user-table">
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role Assignment</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="user : ${users}">
+                            <td style="color: var(--text-muted); font-weight: 600;" th:text="${user.id}">1</td>
+                            <td style="font-weight: 600;" th:text="${user.name}">John Doe</td>
+                            <td th:text="${user.email}">john@domain.com</td>
+                            <td>
+                                <form th:action="@{/admin/updateUserRole}" method="post" style="display: flex; gap: 8px; align-items: center;">
+                                    <input type="hidden" name="userId" th:value="${user.id}">
+                                    <select name="role" class="role-select" onchange="this.form.submit()">
+                                        <option value="CANDIDATE" th:selected="${user.role.name() == 'CANDIDATE'}">CANDIDATE</option>
+                                        <option value="RECRUITER" th:selected="${user.role.name() == 'RECRUITER'}">RECRUITER</option>
+                                        <option value="ADMIN" th:selected="${user.role.name() == 'ADMIN'}">ADMIN</option>
+                                    </select>
+                                </form>
+                            </td>
+                            <td>
+                                <form th:action="@{/admin/deleteUser}" method="post" onsubmit="return confirm('Are you sure you want to delete this user?');">
+                                    <input type="hidden" name="userId" th:value="${user.id}">
+                                    <button type="submit" class="btn btn-danger btn-sm" style="width: auto; padding: 6px 12px; font-weight: 600;">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

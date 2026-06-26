@@ -1,0 +1,77 @@
+### ─── Java / Maven ──────────────────────────────────────────────────────────
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### ─── Spring Boot ────────────────────────────────────────────────────────────
+application-local.properties
+application-prod.properties
+
+### ─── Environment & Secrets ─────────────────────────────────────────────────
+.env
+*.env
+!.env.example
+
+### ─── Python ────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+.venv/
+venv/
+ENV/
+env/
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+
+### ─── Uploads & User Data ───────────────────────────────────────────────────
+uploads/
+/uploads/
+
+### ─── Logs ───────────────────────────────────────────────────────────────────
+logs/
+*.log
+mvn-run.log
+test-output.log
+
+### ─── IDE — Eclipse / STS ───────────────────────────────────────────────────
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### ─── IDE — IntelliJ IDEA ───────────────────────────────────────────────────
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+### ─── IDE — VS Code ─────────────────────────────────────────────────────────
+.vscode/
+
+### ─── IDE — NetBeans ────────────────────────────────────────────────────────
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### ─── OS Files ──────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+### ─── Compiled zip ──────────────────────────────────────────────────────────
+*.zip
+*.jar
