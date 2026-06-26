@@ -119,6 +119,26 @@ Add screenshots here after deployment.
 * Cloud Deployment
 * Docker Support
 
+## 📸 Project Screenshots
+
+### Login Page
+![Login](screenshots/login-page.png)
+
+### Dashboard
+![Dashboard](screenshots/dashboard.png)
+
+### Resume Upload
+![Resume Upload](screenshots/resume-upload.png)
+
+### Interview Sessions
+![Candidate List](screenshots/interviewSessions.png)
+
+### AI Evaluation
+![AI Evaluation](screenshots/ai-evaluation.png)
+
+### Report Generation
+![Report Generation](screenshots/report-generation.png)
+
 ## Author
 
 **Gulshan Baghel**
